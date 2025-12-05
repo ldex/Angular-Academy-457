@@ -7,8 +7,9 @@
 } @else if (isLoading()) {
     <div class="loading"></div>
 } @else {
+    <div>{{ products().length }} products</div>
     <ul class="products">
-        @for (product of products(); track product.id) {
+        @for (product of products() | slice:start():end(); track product.id) {
             <li (click)="selectProduct(product)"
                 [class.discontinued]="product.discontinued"
                 [class.selected]="product == selectedProduct()">
@@ -18,6 +19,16 @@
             </li>
         }
     </ul>
+
+    <div class="right">
+        <a routerLink="create">Add new product...</a>
+    </div>
+
+    <div>
+        <button [disabled]="start() == 0" (click)="changePage(-1)">Previous Page</button>
+        page {{ pageNumber() }}
+        <button [disabled]="products().length <= end()" (click)="changePage(1)">Next Page</button>
+    </div>
 
     <app-product-details [product]="selectedProduct()"></app-product-details>
 }
