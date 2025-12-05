@@ -1,69 +1,43 @@
-import { Injectable, Signal, signal } from '@angular/core';
+import { inject, Injectable, Signal, signal } from '@angular/core';
 import { Product } from '../models/product';
+import { ApiService } from '../api/api-service';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ProductService {
+  private apiService = inject(ApiService)
+  private productsCache = signal<Product[]>([])
+  private loading = signal(false)
+  readonly isLoading = this.loading.asReadonly()
+  errorMessage = signal<string>(undefined)
 
   getProducts(): Signal<Product[]> {
-    return signal([
-    {
-      id: 1,
-      name: 'Trek SSL 2026',
-      price: 1799.9,
-      description: 'Racing bike.',
-      discontinued: false,
-      fixedPrice: false,
-      imageUrl:
-        'https://raw.githubusercontent.com/ldex/angular-full-project/refs/heads/master/src/assets/images/trek.jpg',
-      modifiedDate: new Date(2026, 12, 8),
-    },
-    {
-      id: 2,
-      name: 'City XT 2025',
-      price: 1659.5,
-      description: 'City bike.',
-      discontinued: true,
-      fixedPrice: false,
-      imageUrl:
-        'https://raw.githubusercontent.com/ldex/angular-full-project/refs/heads/master/src/assets/images/city.jpg',
-      modifiedDate: new Date(2025, 1, 12),
-    },
-    {
-      id: 3,
-      name: 'Cosmic Cobat 2025',
-      price: 1499.9,
-      description: 'Great bike.',
-      discontinued: false,
-      fixedPrice: false,
-      imageUrl:
-        'https://raw.githubusercontent.com/ldex/angular-full-project/refs/heads/master/src/assets/images/cosmic-cobat.jpg',
-      modifiedDate: new Date(2025, 1, 2),
-    },
-    {
-      id: 4,
-      name: 'Hero DTB 2025',
-      price: 1759,
-      description: "Champion's bike.",
-      discontinued: true,
-      fixedPrice: true,
-      imageUrl:
-        'https://raw.githubusercontent.com/ldex/angular-full-project/refs/heads/master/src/assets/images/hero-dtb.jpg',
-      modifiedDate: new Date(2025, 1, 24),
-    },
-    {
-      id: 5,
-      name: 'S-WORKS 2026',
-      price: 1999.9,
-      description: 'Ultra bike.',
-      discontinued: false,
-      fixedPrice: false,
-      imageUrl:
-        'https://raw.githubusercontent.com/ldex/angular-full-project/refs/heads/master/src/assets/images/s-works.jpg',
-      modifiedDate: new Date(2026, 1, 19),
-    },
-  ]);
+    this.loading.set(true)
+    this.apiService.getProducts().subscribe(
+      {
+        next: products => {
+          console.table(products)
+          this.productsCache.set(products)
+          this.loading.set(false)
+        },
+        error: err => this.handleError(err, "Failed to load products.")
+      }
+    )
+    return this.productsCache
+  }
+
+  private handleError(httpError: HttpErrorResponse, userMessage: string) {
+    this.loading.set(false)
+    let logMessage: string;
+    if (httpError.error instanceof ErrorEvent) {
+      logMessage = 'An error occurred:' + httpError.error.message;
+    } else {
+      logMessage = `Backend returned code ${httpError.status}, body was: ${httpError.error}`;
+    }
+    console.error(logMessage);
+    this.errorMessage.set(userMessage);
   }
 
 }

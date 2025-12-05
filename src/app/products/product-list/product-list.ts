@@ -15,6 +15,8 @@ export class ProductList {
   private productService = inject(ProductService)
 
   title = signal('Products')
+  isLoading = this.productService.isLoading
+  error = this.productService.errorMessage
 
   products: Signal<Product[]> = this.productService.getProducts();
   selectedProduct = signal<Product | undefined>(undefined)
